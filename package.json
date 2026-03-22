@@ -1,0 +1,12 @@
+{
+  "name": "proxy-telecom",
+  "version": "1.0.0",
+  "description": "Proxy CORS para Inspector de Antenas Telecom",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
