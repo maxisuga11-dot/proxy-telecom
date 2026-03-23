@@ -1,8 +1,3 @@
-bash
-
-cat /home/claude/telecom_app/server.js
-Salida
-
 const express = require('express');
 const cors = require('cors');
 const https = require('https');
