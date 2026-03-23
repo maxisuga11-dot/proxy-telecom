@@ -1,12 +1,14 @@
 {
-  "name": "proxy-telecom",
+  "name": "telecom-inspector",
   "version": "1.0.0",
-  "description": "Proxy CORS para Inspector de Antenas Telecom",
   "main": "server.js",
-  "scripts": {
-    "start": "node server.js"
+  "scripts": { "start": "node server.js" },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
+    "@supabase/supabase-js": "^2.39.0"
   },
-  "engines": {
-    "node": ">=18"
-  }
+  "engines": { "node": ">=18" }
 }
