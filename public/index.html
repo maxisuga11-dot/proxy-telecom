@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inspector de Estructuras — Telecom Argentina</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Tahoma,sans-serif;background:#0d1117;color:#e2e8f0;min-height:100vh}
+.hidden{display:none!important}
+
+/* LOGIN */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.login-box{background:#161b22;border:1px solid #1e2d3d;border-radius:16px;padding:40px;width:100%;max-width:400px}
+.login-logo{text-align:center;margin-bottom:28px}
+.login-logo .ico{width:56px;height:56px;background:#0ea5e9;border-radius:14px;display:inline-flex;align-items:center;justify-content:center;font-size:26px;color:#fff;font-weight:800;margin-bottom:12px}
+.login-logo h1{font-size:18px;font-weight:700;color:#f1f5f9}
+.login-logo p{font-size:12px;color:#64748b;margin-top:4px}
+.form-group{margin-bottom:14px}
+.form-group label{font-size:11px;color:#64748b;display:block;margin-bottom:5px;font-weight:600;text-transform:uppercase;letter-spacing:.3px}
+.form-group input{width:100%;background:#0d1117;border:1px solid #1e2d3d;color:#e2e8f0;padding:10px 12px;border-radius:8px;font-size:14px}
+.form-group input:focus{outline:none;border-color:#0ea5e9}
+.btn-login{width:100%;background:#0ea5e9;color:#fff;border:none;padding:12px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;margin-top:8px}
+.btn-login:hover{background:#0284c7}
+.login-error{background:#1f0a0a;border:1px solid #f8717133;color:#f87171;padding:10px 12px;border-radius:8px;font-size:13px;margin-bottom:14px;display:none}
+
+/* APP */
+.app-wrap{min-height:100vh;display:flex;flex-direction:column}
+.topbar{background:#161b22;border-bottom:1px solid #1e2d3d;padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:52px;flex-shrink:0}
+.topbar-left{display:flex;align-items:center;gap:12px}
+.topbar-logo{width:32px;height:32px;background:#0ea5e9;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;color:#fff;font-weight:800}
+.topbar-title{font-size:14px;font-weight:600;color:#f1f5f9}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.user-badge{display:flex;align-items:center;gap:8px}
+.user-name{font-size:12px;color:#94a3b8}
+.rol-pill{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:600}
+.rol-jefe{background:#0c1e2c;color:#0ea5e9;border:1px solid #0ea5e933}
+.rol-auxiliar{background:#0a1f12;color:#22c55e;border:1px solid #22c55e33}
+.btn-logout{background:none;border:1px solid #1e2d3d;color:#64748b;padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer}
+.btn-logout:hover{border-color:#334155;color:#94a3b8}
+
+.main-layout{display:flex;flex:1;overflow:hidden}
+.sidebar{width:200px;background:#161b22;border-right:1px solid #1e2d3d;padding:16px 0;flex-shrink:0}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 16px;font-size:13px;color:#64748b;cursor:pointer;transition:all .15s}
+.nav-item:hover{background:#1e2d3d;color:#e2e8f0}
+.nav-item.active{background:#0c1e2c;color:#0ea5e9;border-right:2px solid #0ea5e9}
+.nav-sep{font-size:10px;color:#334155;padding:12px 16px 4px;letter-spacing:.5px;text-transform:uppercase}
+
+.content{flex:1;overflow-y:auto;padding:24px}
+
+/* PANELS */
+.panel{background:#161b22;border:1px solid #1e2d3d;border-radius:12px;padding:20px;margin-bottom:16px}
+.panel-title{font-size:11px;font-weight:700;color:#94a3b8;letter-spacing:.8px;margin-bottom:16px;display:flex;align-items:center;gap:8px;text-transform:uppercase}
+.panel-title::before{content:'';width:3px;height:14px;background:#0ea5e9;border-radius:2px;flex-shrink:0}
+
+/* GRIDS */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px}
+.grid4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:10px}
+.field label{font-size:10px;color:#64748b;display:block;margin-bottom:4px;font-weight:600;letter-spacing:.2px;text-transform:uppercase}
+.field input,.field select,.field textarea{width:100%;background:#0d1117;border:1px solid #1e2d3d;color:#e2e8f0;padding:8px 10px;border-radius:6px;font-size:13px}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:#0ea5e9}
+
+/* BUTTONS */
+.btn{padding:9px 18px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .15s}
+.btn-primary{background:#0ea5e9;color:#fff}
+.btn-primary:hover{background:#0284c7}
+.btn-primary:disabled{background:#1e2d3d;color:#475569;cursor:not-allowed}
+.btn-secondary{background:#161b22;border:1px solid #1e2d3d;color:#94a3b8}
+.btn-secondary:hover{border-color:#334155;color:#e2e8f0}
+.btn-success{background:#16a34a;color:#fff}
+.btn-success:hover{background:#15803d}
+.btn-danger{background:#dc2626;color:#fff}
+.btn-danger:hover{background:#b91c1c}
+.btn-row{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:16px}
+
+/* UPLOAD */
+.upload-zone{border:2px dashed #1e2d3d;border-radius:10px;padding:36px 20px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:14px}
+.upload-zone:hover,.upload-zone.drag{border-color:#0ea5e9;background:#0c1e2c}
+.upload-zone svg{width:36px;height:36px;stroke:#334155;margin-bottom:10px}
+.upload-zone .main{font-size:14px;color:#94a3b8;margin-bottom:3px;font-weight:500}
+.upload-zone .sub{font-size:11px;color:#475569}
+
+/* FILE LIST */
+.file-list{display:flex;flex-direction:column;gap:7px;margin-bottom:16px;max-height:300px;overflow-y:auto}
+.file-item{display:flex;align-items:center;gap:10px;background:#0d1117;border:1px solid #1e2d3d;border-radius:8px;padding:8px 12px}
+.file-thumb{width:40px;height:40px;border-radius:5px;object-fit:cover;flex-shrink:0;background:#1e2d3d}
+.file-info{flex:1;min-width:0}
+.file-info .fname{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
+.file-info .fsize{font-size:10px;color:#475569;margin-top:1px}
+.file-cat select{background:#161b22;border:1px solid #1e2d3d;color:#e2e8f0;padding:4px 7px;border-radius:5px;font-size:11px}
+.file-status{font-size:10px;padding:2px 8px;border-radius:16px;white-space:nowrap;font-weight:600}
+.file-status.pending{background:#1e2d3d;color:#64748b}
+.file-status.analyzing{background:#0c1e2c;color:#0ea5e9}
+.file-status.done{background:#0a1f12;color:#22c55e}
+.file-status.error{background:#1f0a0a;color:#f87171}
+
+/* PROGRESS */
+.progress-bar{height:4px;background:#1e2d3d;border-radius:2px;overflow:hidden;margin:10px 0}
+.progress-fill{height:100%;background:#0ea5e9;border-radius:2px;transition:width .3s}
+
+/* FINDINGS */
+.findings-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.finding-card{background:#0d1117;border:1px solid #1e2d3d;border-radius:8px;padding:12px}
+.finding-card h3{font-size:10px;color:#64748b;margin-bottom:8px;letter-spacing:.3px;font-weight:700;text-transform:uppercase}
+.status-row{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:7px}
+.status-btn{padding:3px 9px;border-radius:16px;font-size:10px;cursor:pointer;border:1px solid transparent;font-weight:500}
+.status-btn.ok{border-color:#22c55e33;color:#22c55e}
+.status-btn.ok.sel{background:#0a1f12;border-color:#22c55e}
+.status-btn.warn{border-color:#f59e0b33;color:#f59e0b}
+.status-btn.warn.sel{background:#1a130a;border-color:#f59e0b}
+.status-btn.bad{border-color:#f8717133;color:#f87171}
+.status-btn.bad.sel{background:#1f0a0a;border-color:#f87171}
+.status-btn.na{border-color:#33414f;color:#475569}
+.status-btn.na.sel{background:#1e2d3d;border-color:#475569}
+.finding-card textarea{width:100%;background:#161b22;border:1px solid #1e2d3d;color:#e2e8f0;padding:5px 7px;border-radius:5px;font-size:11px;resize:vertical;min-height:42px}
+
+/* SUMMARY */
+.summary-box{background:#0a1f12;border:1px solid #22c55e33;border-radius:8px;padding:14px;margin-bottom:16px;font-size:12px;line-height:1.6;color:#86efac}
+.tag{display:inline-block;font-size:9px;padding:2px 7px;border-radius:16px;margin-right:3px;margin-bottom:3px;font-weight:600}
+.tag-ok{background:#0a1f1288;border:1px solid #22c55e33;color:#22c55e}
+.tag-warn{background:#1a130a88;border:1px solid #f59e0b33;color:#f59e0b}
+.tag-bad{background:#1f0a0a88;border:1px solid #f8717133;color:#f87171}
+.tag-info{background:#0c1e2c88;border:1px solid #0ea5e933;color:#38bdf8}
+
+/* PHOTO GRID */
+.photo-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin-bottom:14px}
+.photo-thumb{aspect-ratio:1;border-radius:5px;overflow:hidden;border:1px solid #1e2d3d;position:relative}
+.photo-thumb img{width:100%;height:100%;object-fit:cover}
+.photo-thumb .plabel{position:absolute;bottom:0;left:0;right:0;background:#00000099;color:#e2e8f0;font-size:8px;padding:3px 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.photo-thumb .pbadge{position:absolute;top:3px;right:3px;font-size:8px;padding:2px 4px;border-radius:8px;font-weight:700}
+
+/* ALERTS */
+.alert{padding:10px 12px;border-radius:7px;font-size:12px;margin-bottom:12px;display:flex;align-items:flex-start;gap:9px;line-height:1.5}
+.alert-info{background:#0c1e2c;border:1px solid #0ea5e933;color:#38bdf8}
+.alert-warn{background:#1a130a;border:1px solid #f59e0b33;color:#f59e0b}
+.alert-success{background:#0a1f12;border:1px solid #22c55e33;color:#22c55e}
+
+/* API BAR */
+.api-bar{background:#161b22;border:1px solid #1e2d3d;border-radius:8px;padding:12px 14px;margin-bottom:16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.api-bar label{font-size:11px;color:#64748b;white-space:nowrap;font-weight:600}
+.api-bar input{flex:1;min-width:180px;background:#0d1117;border:1px solid #1e2d3d;color:#e2e8f0;padding:6px 9px;border-radius:5px;font-size:13px}
+.api-bar input:focus{outline:none;border-color:#0ea5e9}
+.dot{width:7px;height:7px;border-radius:50%;background:#334155;flex-shrink:0}
+.dot.ok{background:#22c55e}
+
+/* STEPS */
+.steps{display:flex;gap:5px;margin-bottom:20px;overflow-x:auto}
+.step{flex:1;min-width:64px;padding:8px 6px;border-radius:7px;border:1px solid #1e2d3d;background:#161b22;text-align:center;font-size:10px;color:#64748b;white-space:nowrap}
+.step.active{border-color:#0ea5e9;color:#0ea5e9;background:#0c1e2c}
+.step.done{border-color:#22c55e33;color:#22c55e;background:#0a1f12}
+.step-num{font-size:9px;display:block;margin-bottom:1px;opacity:.6}
+
+/* INFORMES TABLE */
+.inf-table{width:100%;border-collapse:collapse;font-size:13px}
+.inf-table th{background:#0d1117;padding:10px 12px;text-align:left;font-weight:600;color:#64748b;font-size:10px;text-transform:uppercase;letter-spacing:.3px;border-bottom:1px solid #1e2d3d}
+.inf-table td{padding:10px 12px;border-bottom:1px solid #1e2d3d;color:#94a3b8;vertical-align:middle}
+.inf-table tr:last-child td{border-bottom:none}
+.inf-table tr:hover td{background:#0d111766}
+.estado-badge{font-size:10px;padding:2px 8px;border-radius:16px;font-weight:600;white-space:nowrap}
+.estado-borrador{background:#1e2d3d;color:#64748b}
+.estado-aprobado{background:#0a1f12;color:#22c55e}
+.estado-pendiente{background:#1a130a;color:#f59e0b}
+
+/* MEASURES */
+.measures-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:16px}
+.meas label{font-size:10px;color:#64748b;display:block;margin-bottom:3px;font-weight:600;text-transform:uppercase}
+.meas input{width:100%;background:#0d1117;border:1px solid #1e2d3d;color:#e2e8f0;padding:6px 9px;border-radius:5px;font-size:12px}
+
+/* SECTION SEP */
+.section-sep{font-size:10px;color:#475569;letter-spacing:.8px;text-transform:uppercase;margin:16px 0 8px;font-weight:700;display:flex;align-items:center;gap:7px}
+.section-sep::after{content:'';flex:1;height:1px;background:#1e2d3d}
+
+/* RADIO */
+.inline-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.inline-row label{font-size:11px;color:#94a3b8;white-space:nowrap;font-weight:600}
+.radio-group{display:flex;gap:5px;flex-wrap:wrap}
+.radio-btn{padding:4px 12px;border-radius:5px;font-size:11px;cursor:pointer;border:1px solid #1e2d3d;background:#0d1117;color:#94a3b8;font-weight:500}
+.radio-btn.sel-si{border-color:#22c55e;color:#22c55e;background:#0a1f12}
+.radio-btn.sel-no{border-color:#475569;color:#64748b;background:#161b22}
+.radio-btn.sel-menor{border-color:#f59e0b;color:#f59e0b;background:#1a130a}
+.radio-btn.sel-mayor{border-color:#f87171;color:#f87171;background:#1f0a0a}
+.radio-btn.sel-emergencia{border-color:#ef4444;color:#ef4444;background:#2a0808}
+.radio-btn.sel-noexiste{border-color:#f87171;color:#f87171;background:#1f0a0a}
+.radio-btn.sel-insegura{border-color:#f59e0b;color:#f59e0b;background:#1a130a}
+.radio-btn.sel-otro{border-color:#64748b;color:#94a3b8;background:#1e2d3d}
+
+/* PAGES */
+.page-content{display:none}
+.page-content.active{display:block}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+.stat-card{background:#0d1117;border-radius:8px;padding:14px;text-align:center}
+.stat-num{font-size:28px;font-weight:700;color:#0ea5e9;margin-bottom:4px}
+.stat-label{font-size:11px;color:#475569}
+
+@media(max-width:700px){
+  .sidebar{display:none}
+  .grid2,.grid3,.grid4,.findings-grid,.measures-grid,.stats-grid{grid-template-columns:1fr 1fr}
+  .photo-grid{grid-template-columns:repeat(3,1fr)}
+  .content{padding:14px}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-wrap">
+    <div class="login-box">
+      <div class="login-logo">
+        <div class="ico">IA</div>
+        <h1>Inspector de Estructuras</h1>
+        <p>Telecom Argentina — Sistema de informes</p>
+      </div>
+      <div class="login-error" id="loginError"></div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="loginEmail" placeholder="tu@email.com" onkeydown="if(event.key==='Enter')doLogin()"/>
+      </div>
+      <div class="form-group">
+        <label>Contrasena</label>
+        <input type="password" id="loginPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/>
+      </div>
+      <button class="btn-login" id="btnLogin" onclick="doLogin()">Ingresar</button>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="appScreen" class="hidden app-wrap">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-logo">IA</div>
+      <span class="topbar-title">Telecom Inspector</span>
+    </div>
+    <div class="topbar-right">
+      <div class="user-badge">
+        <span class="user-name" id="topUserName"></span>
+        <span class="rol-pill" id="topUserRol"></span>
+      </div>
+      <button class="btn-logout" onclick="doLogout()">Salir</button>
+    </div>
+  </div>
+
+  <div class="main-layout">
+    <div class="sidebar">
+      <div class="nav-sep">Menu</div>
+      <div class="nav-item active" onclick="showPage('dashboard')">Panel principal</div>
+      <div class="nav-item" onclick="showPage('nuevo')">Nuevo informe</div>
+      <div class="nav-item" onclick="showPage('informes')">Mis informes</div>
+      <div id="navJefe" class="hidden">
+        <div class="nav-sep">Jefe</div>
+        <div class="nav-item" onclick="showPage('todos')">Todos los informes</div>
+        <div class="nav-item" onclick="showPage('usuarios')">Usuarios</div>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- DASHBOARD -->
+      <div id="pageDashboard" class="page-content active">
+        <div class="panel">
+          <div class="panel-title">Panel principal</div>
+          <div class="stats-grid">
+            <div class="stat-card"><div class="stat-num" id="statTotal">0</div><div class="stat-label">Total informes</div></div>
+            <div class="stat-card"><div class="stat-num" id="statBorrador">0</div><div class="stat-label">Borradores</div></div>
+            <div class="stat-card"><div class="stat-num" id="statAprobado">0</div><div class="stat-label">Aprobados</div></div>
+            <div class="stat-card"><div class="stat-num" id="statMes">0</div><div class="stat-label">Este mes</div></div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">Ultimos informes</div>
+          <table class="inf-table" id="dashInformes">
+            <thead><tr><th>Sitio</th><th>Estado</th><th>Fecha</th><th></th></tr></thead>
+            <tbody id="dashInformesBody"><tr><td colspan="4" style="text-align:center;color:#475569;padding:20px">Cargando...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- NUEVO INFORME -->
+      <div id="pageNuevo" class="page-content">
+        <div class="api-bar">
+          <span id="apiDot" class="dot"></span>
+          <label>API Key Anthropic:</label>
+          <input type="password" id="apiKey" placeholder="sk-ant-api03-..." oninput="checkApi()"/>
+          <span id="apiStatus" style="font-size:11px;color:#475569">Sin configurar</span>
+        </div>
+
+        <div class="steps">
+          <div class="step active" id="s1"><span class="step-num">01</span>Caratula</div>
+          <div class="step" id="s2"><span class="step-num">02</span>Fotos</div>
+          <div class="step" id="s3"><span class="step-num">03</span>Analisis IA</div>
+          <div class="step" id="s4"><span class="step-num">04</span>Revision</div>
+          <div class="step" id="s5"><span class="step-num">05</span>PDF</div>
+        </div>
+
+        <!-- STEP 1 -->
+        <div id="step1">
+          <div class="panel">
+            <div class="panel-title">Datos del contratista</div>
+            <div class="grid2">
+              <div class="field"><label>Responsable</label><input id="responsable" placeholder="Ej: Claudio Cafaro"/></div>
+              <div class="field"><label>Contratista / Empresa</label><input id="contratista" placeholder="Ej: HAGAMA SRL"/></div>
+            </div>
+            <div class="grid3">
+              <div class="field"><label>Relevado por</label><input id="relevado" placeholder="Nombre del inspector"/></div>
+              <div class="field"><label>Fecha en campo</label><input id="fechaCampo" type="date"/></div>
+              <div class="field"><label>N Matricula y Consejo</label><input id="matricula" placeholder="Ej: 12345 / CPIC"/></div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-title">Datos basicos de la estructura</div>
+            <div class="grid3">
+              <div class="field"><label>NAMING SETA / Codigo ESA</label><input id="naming" placeholder="Ej: PX0032"/></div>
+              <div class="field"><label>Codigo Sitio TP</label><input id="codigoTP" placeholder="Ej: A01-S112"/></div>
+              <div class="field"><label>Nombre del sitio</label><input id="nombre" placeholder="Ej: Sampacho Central"/></div>
+            </div>
+            <div class="grid4">
+              <div class="field"><label>Tipo de estructura</label>
+                <select id="tipo" onchange="onTipoChange()">
+                  <option value="mastil_riendas">Mastil con riendas</option>
+                  <option value="torre_autosoportada">Torre autosoportada</option>
+                  <option value="monoposte">Monoposte</option>
+                  <option value="poste">Poste</option>
+                  <option value="pedestal">Pedestal</option>
+                  <option value="rbm">RBM</option>
+                </select>
+              </div>
+              <div class="field"><label>Lote</label><input id="lote" placeholder="Ej: 2024"/></div>
+              <div class="field"><label>Region</label><input id="region" placeholder="Ej: MEDI"/></div>
+              <div class="field"><label>Provincia</label><input id="provincia" placeholder="Ej: Cordoba"/></div>
+            </div>
+            <div class="grid4">
+              <div class="field"><label>Ciudad</label><input id="ciudad" placeholder="Ej: Sampacho"/></div>
+              <div class="field"><label>Zona segun pliego</label><input id="zona" type="number" placeholder="Ej: 4"/></div>
+              <div class="field"><label>Altura estructura (m)</label><input id="altura" type="number" placeholder="Ej: 35"/></div>
+              <div class="field"><label>Altura base (m)</label><input id="alturaBase" type="number" placeholder="Ej: 5.5"/></div>
+            </div>
+            <div class="grid2">
+              <div class="field"><label>Latitud</label><input id="lat" type="number" step="0.000001" placeholder="Ej: -33.383723"/></div>
+              <div class="field"><label>Longitud</label><input id="lon" type="number" step="0.000001" placeholder="Ej: -64.721862"/></div>
+            </div>
+            <div id="fieldRiendas" class="grid2" style="margin-top:6px">
+              <div class="field"><label>N de anclajes / riendas</label><input id="nriendas" type="number" placeholder="Ej: 3" value="3"/></div>
+              <div class="field"><label>Cantidad de cinturones</label><input id="ncinturones" type="number" placeholder="Ej: 1" value="1"/></div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-title">Informe ampliado</div>
+            <div class="inline-row">
+              <label>Informe Ampliado:</label>
+              <div class="radio-group" id="rg_ampliado">
+                <button class="radio-btn" onclick="setRadio('ampliado','SI','sel-si',this)">SI</button>
+                <button class="radio-btn sel-no" onclick="setRadio('ampliado','NO','sel-no',this)">NO</button>
+              </div>
+            </div>
+            <div id="ampliado_estado" style="display:none;margin-top:10px">
+              <div class="inline-row">
+                <label>Estado correctivo:</label>
+                <div class="radio-group" id="rg_estado">
+                  <button class="radio-btn" onclick="setRadio('estado','ESTADO MENOR','sel-menor',this)">Estado menor</button>
+                  <button class="radio-btn" onclick="setRadio('estado','ESTADO MAYOR','sel-mayor',this)">Estado mayor</button>
+                  <button class="radio-btn" onclick="setRadio('estado','ESTADO EMERGENCIA','sel-emergencia',this)">Estado emergencia</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-title">Informe fallido</div>
+            <div class="inline-row">
+              <label>Informe Fallido:</label>
+              <div class="radio-group" id="rg_fallido">
+                <button class="radio-btn" onclick="setRadio('fallido','SI','sel-si',this)">SI</button>
+                <button class="radio-btn sel-no" onclick="setRadio('fallido','NO','sel-no',this)">NO</button>
+              </div>
+            </div>
+            <div id="fallido_motivo" style="display:none;margin-top:10px">
+              <div class="inline-row" style="margin-bottom:8px">
+                <label>Motivo:</label>
+                <div class="radio-group" id="rg_motivo">
+                  <button class="radio-btn" onclick="setRadio('motivo','No existe la estructura','sel-noexiste',this)">No existe la estructura</button>
+                  <button class="radio-btn" onclick="setRadio('motivo','Condicion insegura','sel-insegura',this)">Condicion insegura</button>
+                  <button class="radio-btn" onclick="setRadio('motivo','Otro','sel-otro',this)">Otro</button>
+                </div>
+              </div>
+              <div class="field"><label>Observaciones</label><textarea id="obsFallido" rows="2" placeholder="Describa el motivo..."></textarea></div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-title">Carga de fotos</div>
+            <div class="upload-zone" id="dropZone" onclick="document.getElementById('fileInput').click()"
+                 ondragover="event.preventDefault();this.classList.add('drag')"
+                 ondragleave="this.classList.remove('drag')"
+                 ondrop="handleDrop(event)">
+              <svg viewBox="0 0 24 24" fill="none"><path d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <div class="main">Arrastra el ZIP de WhatsApp o hace clic para seleccionar fotos</div>
+              <div class="sub">ZIP con fotos · JPG · PNG — sin limite de imagenes</div>
+            </div>
+            <input type="file" id="fileInput" style="display:none" multiple accept="image/*,.zip" onchange="handleFiles(this.files)"/>
+            <div id="fileList" class="file-list"></div>
+            <div class="btn-row">
+              <button class="btn btn-primary" id="btnNext1" onclick="goToStep(2)" disabled>Continuar al analisis</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 2 -->
+        <div id="step2" style="display:none">
+          <div class="panel">
+            <div class="panel-title">Analisis con inteligencia artificial</div>
+            <div class="alert alert-info"><span>i</span><span>La IA analiza cada foto y detecta el estado y hallazgos. Revisa y corrige antes de generar el PDF. Cada correccion que hagas se guarda para mejorar el analisis en el futuro.</span></div>
+            <div id="analysisList" class="file-list"></div>
+            <div class="progress-bar"><div class="progress-fill" id="pFill" style="width:0%"></div></div>
+            <div id="pText" style="font-size:11px;color:#475569;margin-bottom:12px"></div>
+            <div class="btn-row">
+              <button class="btn btn-secondary" onclick="goToStep(1)">Volver</button>
+              <button class="btn btn-primary" id="btnAnalyze" onclick="startAnalysis()">Iniciar analisis IA</button>
+              <button class="btn btn-primary" id="btnNext2" onclick="goToStep(3)" disabled style="display:none">Ver resultados</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 3 -->
+        <div id="step3" style="display:none">
+          <div class="panel">
+            <div class="panel-title">Revision de hallazgos</div>
+            <div class="section-sep">Estado general</div>
+            <div id="estadoGeneral" class="summary-box">Procesando...</div>
+            <div id="secMediciones">
+              <div class="section-sep">Mediciones de pretensado</div>
+              <div class="measures-grid" id="medicionesContainer"></div>
+            </div>
+            <div class="section-sep">Verificacion por seccion</div>
+            <div class="findings-grid" id="findingsGrid"></div>
+            <div class="section-sep">Observaciones generales</div>
+            <textarea id="obsGral" style="width:100%;background:#0d1117;border:1px solid #1e2d3d;color:#e2e8f0;padding:9px;border-radius:7px;font-size:12px;min-height:70px;resize:vertical" placeholder="Observaciones adicionales..."></textarea>
+            <div class="section-sep">Recomendaciones</div>
+            <textarea id="recs" style="width:100%;background:#0d1117;border:1px solid #1e2d3d;color:#e2e8f0;padding:9px;border-radius:7px;font-size:12px;min-height:70px;resize:vertical" placeholder="Recomendaciones de mantenimiento..."></textarea>
+            <div class="section-sep">Fotos del informe</div>
+            <div class="photo-grid" id="photoGrid"></div>
+            <div class="btn-row">
+              <button class="btn btn-secondary" onclick="goToStep(2)">Volver</button>
+              <button class="btn btn-primary" onclick="guardarInforme()">Guardar borrador</button>
+              <button class="btn btn-success" onclick="generatePDF()">Generar PDF</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MIS INFORMES -->
+      <div id="pageInformes" class="page-content">
+        <div class="panel">
+          <div class="panel-title">Mis informes</div>
+          <table class="inf-table">
+            <thead><tr><th>Sitio</th><th>Estado</th><th>Fecha</th><th>Acciones</th></tr></thead>
+            <tbody id="misInformesBody"><tr><td colspan="4" style="text-align:center;color:#475569;padding:20px">Cargando...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TODOS LOS INFORMES (solo jefe) -->
+      <div id="pageTodos" class="page-content">
+        <div class="panel">
+          <div class="panel-title">Todos los informes del equipo</div>
+          <table class="inf-table">
+            <thead><tr><th>Sitio</th><th>Inspector</th><th>Estado</th><th>Fecha</th><th>Acciones</th></tr></thead>
+            <tbody id="todosInformesBody"><tr><td colspan="5" style="text-align:center;color:#475569;padding:20px">Cargando...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- USUARIOS (solo jefe) -->
+      <div id="pageUsuarios" class="page-content">
+        <div class="panel">
+          <div class="panel-title">Gestion de usuarios</div>
+          <div class="grid3" style="margin-bottom:16px">
+            <div class="field"><label>Nombre</label><input id="nuevoNombre" placeholder="Nombre completo"/></div>
+            <div class="field"><label>Email</label><input id="nuevoEmail" type="email" placeholder="email@ejemplo.com"/></div>
+            <div class="field"><label>Contrasena</label><input id="nuevoPass" type="password" placeholder="Contrasena inicial"/></div>
+          </div>
+          <div class="grid2" style="margin-bottom:16px">
+            <div class="field"><label>Rol</label>
+              <select id="nuevoRol">
+                <option value="auxiliar">Auxiliar</option>
+                <option value="jefe">Jefe</option>
+              </select>
+            </div>
+            <div style="display:flex;align-items:flex-end">
+              <button class="btn btn-primary" onclick="crearUsuario()" style="width:100%">Crear usuario</button>
+            </div>
+          </div>
+          <div id="usuarioMsg" style="font-size:12px;margin-bottom:12px;display:none"></div>
+          <table class="inf-table">
+            <thead><tr><th>Nombre</th><th>Email</th><th>Rol</th><th>Creado</th></tr></thead>
+            <tbody id="usuariosBody"><tr><td colspan="4" style="text-align:center;color:#475569;padding:20px">Cargando...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+var BASE = '';
+var token = localStorage.getItem('telecom_token');
+var currentUser = JSON.parse(localStorage.getItem('telecom_user') || 'null');
+var uploadedFiles = [], analysisResults = {};
+var radios = { ampliado: 'NO', estado: '', fallido: 'NO', motivo: '' };
+var CATS = { perfileria:'Perfileria', riendas:'Riendas / tensores', buloneria:'Buloneria', fundacion:'Fundacion / base', oxido:'Oxido / corrosion', puesta_tierra:'Puesta a tierra', prensa_cables:'Prensa cables', balizamiento:'Balizamiento', salvacaidas:'Salvacaidas', galvanizado:'Galvanizado', general:'General' };
+var TIPO_LABELS = { mastil_riendas:'Mastil con riendas', torre_autosoportada:'Torre autosoportada', monoposte:'Monoposte', poste:'Poste', pedestal:'Pedestal', rbm:'RBM' };
+var TIPO_RIENDAS = ['mastil_riendas'];
+var SECTIONS = [
+  {id:'perfileria',label:'1. Perfileria y accesorios'},
+  {id:'riendas',label:'2. Riendas'},
+  {id:'buloneria',label:'3. Buloneria, grampas y tuercas'},
+  {id:'fundacion',label:'4. Fundaciones y anclajes'},
+  {id:'balizamiento_noc',label:'5. Balizamiento nocturno'},
+  {id:'balizamiento_dia',label:'6. Balizamiento diurno'},
+  {id:'puesta_tierra',label:'7. PAT - Puesta a tierra'},
+  {id:'limpieza',label:'8. Limpieza / nidos'},
+  {id:'desmalezado',label:'9. Desmalezado y poda'},
+  {id:'galvanizado',label:'10. Galvanizado en frio'},
+  {id:'antenas',label:'11. Antenas y soportes'},
+  {id:'verticalidad',label:'12. Torsion y verticalidad'},
+  {id:'salvacaidas',label:'13. Salvacaidas'}
+];
+window._st = {};
+SECTIONS.forEach(function(s){ window._st[s.id] = 'ok'; });
+
+// INIT
+if (token && currentUser) showApp();
+
+async function api(path, opts) {
+  opts = opts || {};
+  opts.headers = opts.headers || {};
+  if (token) opts.headers['Authorization'] = 'Bearer ' + token;
+  opts.headers['Content-Type'] = opts.headers['Content-Type'] || 'application/json';
+  var resp = await fetch(BASE + path, opts);
+  return resp;
+}
+
+// LOGIN
+async function doLogin() {
+  var email = document.getElementById('loginEmail').value.trim();
+  var pass = document.getElementById('loginPass').value;
+  var err = document.getElementById('loginError');
+  var btn = document.getElementById('btnLogin');
+  if (!email || !pass) { err.textContent = 'Ingresa email y contrasena'; err.style.display = 'block'; return; }
+  btn.textContent = 'Ingresando...'; btn.disabled = true;
+  try {
+    var resp = await fetch(BASE + '/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password: pass }) });
+    var data = await resp.json();
+    if (!resp.ok) { err.textContent = data.error || 'Error al ingresar'; err.style.display = 'block'; btn.textContent = 'Ingresar'; btn.disabled = false; return; }
+    token = data.token;
+    currentUser = data.user;
+    localStorage.setItem('telecom_token', token);
+    localStorage.setItem('telecom_user', JSON.stringify(currentUser));
+    showApp();
+  } catch(e) { err.textContent = 'Error de conexion: ' + e.message; err.style.display = 'block'; btn.textContent = 'Ingresar'; btn.disabled = false; }
+}
+
+function showApp() {
+  document.getElementById('loginScreen').classList.add('hidden');
+  document.getElementById('appScreen').classList.remove('hidden');
+  document.getElementById('topUserName').textContent = currentUser.nombre;
+  var rolEl = document.getElementById('topUserRol');
+  rolEl.textContent = currentUser.rol === 'jefe' || currentUser.rol === 'admin' ? 'Jefe' : 'Auxiliar';
+  rolEl.className = 'rol-pill ' + (currentUser.rol === 'jefe' || currentUser.rol === 'admin' ? 'rol-jefe' : 'rol-auxiliar');
+  if (currentUser.rol === 'jefe' || currentUser.rol === 'admin') document.getElementById('navJefe').classList.remove('hidden');
+  document.getElementById('fechaCampo').value = new Date().toISOString().split('T')[0];
+  onTipoChange();
+  loadDashboard();
+}
+
+function doLogout() {
+  token = null; currentUser = null;
+  localStorage.removeItem('telecom_token');
+  localStorage.removeItem('telecom_user');
+  document.getElementById('appScreen').classList.add('hidden');
+  document.getElementById('loginScreen').classList.remove('hidden');
+}
+
+// NAVIGATION
+function showPage(page) {
+  document.querySelectorAll('.page-content').forEach(function(p){ p.classList.remove('active'); });
+  document.querySelectorAll('.nav-item').forEach(function(n){ n.classList.remove('active'); });
+  document.getElementById('page' + page.charAt(0).toUpperCase() + page.slice(1)).classList.add('active');
+  if (page === 'informes') loadMisInformes();
+  if (page === 'todos') loadTodosInformes();
+  if (page === 'usuarios') loadUsuarios();
+  if (page === 'dashboard') loadDashboard();
+  if (page === 'nuevo') { resetNuevo(); }
+}
+
+function resetNuevo() {
+  uploadedFiles = []; analysisResults = {};
+  goToStep(1);
+  document.getElementById('fileList').innerHTML = '';
+  document.getElementById('btnNext1').disabled = true;
+}
+
+// STEPS
+function goToStep(n) {
+  ['step1','step2','step3'].forEach(function(s,i){ document.getElementById(s).style.display = i+1===n?'block':'none'; });
+  ['s1','s2','s3','s4','s5'].forEach(function(s,i){ document.getElementById(s).className = 'step'+(i+1<n?' done':i+1===n?' active':''); });
+  if (n === 3) buildReviewPage();
+}
+
+// API KEY
+function checkApi() {
+  var k = document.getElementById('apiKey').value.trim();
+  var ok = k.startsWith('sk-ant');
+  document.getElementById('apiDot').className = 'dot' + (ok ? ' ok' : '');
+  document.getElementById('apiStatus').textContent = ok ? 'Configurada OK' : 'Sin configurar';
+  document.getElementById('apiStatus').style.color = ok ? '#22c55e' : '#475569';
+}
+
+// RADIO
+function setRadio(key, val, cls, btn) {
+  radios[key] = val;
+  document.getElementById('rg_' + key).querySelectorAll('.radio-btn').forEach(function(b){ b.className = 'radio-btn'; });
+  btn.className = 'radio-btn ' + cls;
+  if (key === 'ampliado') document.getElementById('ampliado_estado').style.display = val === 'SI' ? 'block' : 'none';
+  if (key === 'fallido') document.getElementById('fallido_motivo').style.display = val === 'SI' ? 'block' : 'none';
+}
+
+function onTipoChange() {
+  var t = document.getElementById('tipo').value;
+  var fr = document.getElementById('fieldRiendas');
+  var hasR = TIPO_RIENDAS.includes(t);
+  fr.style.opacity = hasR ? '1' : '0.35';
+  fr.querySelectorAll('input').forEach(function(i){ i.disabled = !hasR; });
+}
+
+// FILES
+async function handleFiles(files) {
+  for (var i = 0; i < files.length; i++) {
+    var f = files[i];
+    if (f.name.toLowerCase().endsWith('.zip')) await extractZip(f);
+    else if (f.type.startsWith('image/')) addImg(f);
+  }
+  updateFileList();
+}
+function handleDrop(e) { e.preventDefault(); document.getElementById('dropZone').classList.remove('drag'); handleFiles(e.dataTransfer.files); }
+async function extractZip(file) {
+  try {
+    var z = await JSZip.loadAsync(file);
+    for (var n in z.files) {
+      var e = z.files[n]; if (e.dir) continue;
+      var ext = n.split('.').pop().toLowerCase();
+      if (!['jpg','jpeg','png','webp'].includes(ext)) continue;
+      var b = await e.async('blob');
+      addImg(new File([b], n.split('/').pop(), { type: 'image/' + ext }));
+    }
+  } catch(err) { alert('Error ZIP: ' + err.message); }
+}
+function addImg(f) { uploadedFiles.push({ file: f, url: URL.createObjectURL(f), name: f.name, category: guessCategory(f.name), status: 'pending' }); }
+function guessCategory(n) {
+  n = n.toLowerCase();
+  if (/rienda|tensor/.test(n)) return 'riendas';
+  if (/bulo|tornill|grampa/.test(n)) return 'buloneria';
+  if (/funda|base|anclaj/.test(n)) return 'fundacion';
+  if (/oxid|corros/.test(n)) return 'oxido';
+  if (/tierra|penta|pararay|pat/.test(n)) return 'puesta_tierra';
+  if (/prensa|cable/.test(n)) return 'prensa_cables';
+  if (/perfil|angular/.test(n)) return 'perfileria';
+  if (/baliz/.test(n)) return 'balizamiento';
+  if (/salva/.test(n)) return 'salvacaidas';
+  if (/galvan/.test(n)) return 'galvanizado';
+  return 'general';
+}
+function updateFileList() {
+  var el = document.getElementById('fileList');
+  if (!uploadedFiles.length) { el.innerHTML = ''; document.getElementById('btnNext1').disabled = true; return; }
+  el.innerHTML = uploadedFiles.map(function(f,i){
+    return '<div class="file-item"><img class="file-thumb" src="'+f.url+'"/><div class="file-info"><div class="fname">'+f.name+'</div><div class="fsize">'+(f.file.size/1024).toFixed(0)+' KB</div></div><div class="file-cat"><select onchange="uploadedFiles['+i+'].category=this.value">'+Object.entries(CATS).map(function(kv){return '<option value="'+kv[0]+'"'+(f.category===kv[0]?' selected':'')+'>'+kv[1]+'</option>';}).join('')+'</select></div><button onclick="uploadedFiles.splice('+i+',1);updateFileList()" style="background:none;border:none;color:#475569;cursor:pointer;font-size:16px;padding:2px 8px">x</button></div>';
+  }).join('');
+  document.getElementById('btnNext1').disabled = false;
+}
+
+// ANALYSIS
+function buildAnalysisList() {
+  document.getElementById('analysisList').innerHTML = uploadedFiles.map(function(f,i){
+    return '<div class="file-item" id="ai-'+i+'"><img class="file-thumb" src="'+f.url+'"/><div class="file-info"><div class="fname">'+f.name+'</div><div class="fsize" id="ai-cat-'+i+'">'+CATS[f.category]+'</div></div><span class="file-status pending" id="ai-st-'+i+'">Pendiente</span></div>';
+  }).join('');
+}
+async function fileToB64(file) {
+  return new Promise(function(res,rej){
+    var r = new FileReader();
+    r.onload = function(){ res(r.result.split(',')[1]); };
+    r.onerror = rej;
+    r.readAsDataURL(file);
+  });
+}
+
+async function getContextoCorrecciones() {
+  try {
+    var resp = await api('/api/correcciones/contexto');
+    var data = await resp.json();
+    if (!data.length) return '';
+    return '\n\nCRITERIOS APRENDIDOS DE INFORMES ANTERIORES (aplicar siempre):\n' +
+      data.map(function(c){ return '- En categoria '+c.categoria+': lo que la IA marco como '+c.estado_ia+' fue corregido a '+c.estado_corregido+(c.observacion?' porque: '+c.observacion:''); }).join('\n');
+  } catch(e) { return ''; }
+}
+
+async function startAnalysis() {
+  var key = document.getElementById('apiKey').value.trim();
+  if (!key.startsWith('sk-ant')) { alert('Ingresa tu API Key de Anthropic.\n\nObtene una en: console.anthropic.com'); return; }
+  buildAnalysisList();
+  var btn = document.getElementById('btnAnalyze');
+  btn.disabled = true; btn.textContent = 'Analizando...';
+  document.getElementById('pFill').style.width = '0%';
+  analysisResults = {};
+  var contexto = await getContextoCorrecciones();
+  var done = 0;
+
+  for (var i = 0; i < uploadedFiles.length; i++) {
+    var st = document.getElementById('ai-st-' + i);
+    st.className = 'file-status analyzing'; st.textContent = 'Analizando...';
+    document.getElementById('pText').textContent = 'Procesando imagen ' + (i+1) + ' de ' + uploadedFiles.length + '...';
+    try {
+      var b64 = await fileToB64(uploadedFiles[i].file);
+      var ext = uploadedFiles[i].file.name.split('.').pop().toLowerCase();
+      var mime = ext === 'png' ? 'image/png' : 'image/jpeg';
+      var prompt = 'Sos un inspector tecnico de estructuras de antenas Telecom Argentina. Analiza esta imagen de forma concisa y practica. Solo indica el estado y si hay algo fuera de lugar que requiera correccion (bulon flojo, oxido visible, membrana rota, cable suelto, etc). Si esta todo bien indicalo brevemente. Responde SOLO con JSON valido sin texto extra. Categoria actual: ' + CATS[uploadedFiles[i].category] + '.' + contexto + ' {"categoria":"perfileria|riendas|buloneria|fundacion|oxido|puesta_tierra|prensa_cables|balizamiento|salvacaidas|galvanizado|general","estado":"BUENO|REGULAR|MALO|CRITICO","hallazgos":["observacion puntual 1","observacion puntual 2"],"descripcion":"estado breve y que hay que corregir si corresponde"}';
+
+      var resp = await api('/api/analizar', {
+        method: 'POST',
+        headers: { 'x-api-key': key, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model: 'claude-opus-4-5', max_tokens: 500, messages: [{ role: 'user', content: [{ type: 'image', source: { type: 'base64', media_type: mime, data: b64 } }, { type: 'text', text: prompt }] }] })
+      });
+      var data = await resp.json();
+      if (data.error) throw new Error(data.error.message || 'Error de API');
+      var txt = (data.content[0].text || '{}').replace(/```json|```/g,'').trim();
+      var r = JSON.parse(txt);
+      analysisResults[i] = r;
+      uploadedFiles[i].category = r.categoria || uploadedFiles[i].category;
+      uploadedFiles[i].status = 'done';
+      st.className = 'file-status done'; st.textContent = r.estado || 'OK';
+      document.getElementById('ai-cat-' + i).textContent = CATS[r.categoria] || CATS[uploadedFiles[i].category];
+    } catch(err) {
+      analysisResults[i] = { estado: 'ERROR', hallazgos: ['Error: ' + err.message], descripcion: 'No se pudo procesar.' };
+      uploadedFiles[i].status = 'error';
+      st.className = 'file-status error'; st.textContent = 'Error';
+    }
+    done++;
+    document.getElementById('pFill').style.width = (done / uploadedFiles.length * 100) + '%';
+  }
+  document.getElementById('pText').textContent = 'Analisis completado — ' + done + ' imagenes procesadas';
+  document.getElementById('btnNext2').style.display = '';
+  document.getElementById('btnNext2').disabled = false;
+  btn.textContent = 'Reiniciar analisis'; btn.disabled = false;
+}
+
+// REVIEW PAGE
+function buildReviewPage() {
+  var tipo = document.getElementById('tipo').value;
+  var tienRiendas = TIPO_RIENDAS.includes(tipo);
+  var allR = Object.values(analysisResults);
+  var malos = allR.filter(function(r){ return r.estado==='MALO'||r.estado==='CRITICO'; }).length;
+  var regs = allR.filter(function(r){ return r.estado==='REGULAR'; }).length;
+  var buenos = allR.filter(function(r){ return r.estado==='BUENO'; }).length;
+  var html = '';
+  if (malos > 0) html += '<span class="tag tag-bad">' + malos + ' criticos/malos</span>';
+  if (regs > 0) html += '<span class="tag tag-warn">' + regs + ' regulares</span>';
+  if (buenos > 0) html += '<span class="tag tag-ok">' + buenos + ' OK</span>';
+  html += '<span class="tag tag-info">' + allR.length + ' fotos</span><br><br>';
+  var hallazgos = allR.flatMap(function(r){ return r.hallazgos||[]; }).filter(function(h){ return h && !h.toLowerCase().includes('error'); }).slice(0,8);
+  html += hallazgos.length ? hallazgos.map(function(h){ return '- ' + h; }).join('<br>') : 'Sin hallazgos criticos detectados.';
+  document.getElementById('estadoGeneral').innerHTML = html;
+
+  var sm = document.getElementById('secMediciones');
+  sm.style.display = tienRiendas ? '' : 'none';
+  if (tienRiendas) {
+    var nr = parseInt(document.getElementById('nriendas').value) || 3;
+    var mc = '';
+    for (var i = 1; i <= nr; i++) mc += '<div class="meas"><label>Anclaje ' + i + ' - Pretensado (kg)</label><input id="med'+i+'" type="number" step="0.1" placeholder="ej: 402.6"/></div>';
+    mc += '<div class="meas"><label>T minimo s/norma (kg)</label><input id="medMin" type="number" step="0.1" placeholder="403.2"/></div>';
+    mc += '<div class="meas"><label>T maximo s/norma (kg)</label><input id="medMax" type="number" step="0.1" placeholder="864.0"/></div>';
+    document.getElementById('medicionesContainer').innerHTML = mc;
+  }
+
+  var sectShow = tienRiendas ? SECTIONS : SECTIONS.filter(function(s){ return s.id !== 'riendas'; });
+  document.getElementById('findingsGrid').innerHTML = sectShow.map(function(s){
+    var catKey = s.id.replace(/_noc|_dia/,'');
+    var rel = Object.values(analysisResults).filter(function(r){ return r.categoria === catKey || r.categoria === s.id.split('_')[0]; });
+    var ws = rel.find(function(r){ return r.estado==='CRITICO'||r.estado==='MALO'; }) ? 'bad' : rel.find(function(r){ return r.estado==='REGULAR'; }) ? 'warn' : 'ok';
+    var desc = rel.map(function(r){ return r.descripcion; }).filter(Boolean).join(' ');
+    window._st[s.id] = ws;
+    var estIa = rel.length ? (rel[0].estado || '') : '';
+    return '<div class="finding-card"><h3>' + s.label + '</h3><div class="status-row"><button class="status-btn ok' + (ws==='ok'?' sel':'') + '" onclick="setSt(\''+s.id+'\',\'ok\',this,\''+estIa+'\')">Bueno</button><button class="status-btn warn' + (ws==='warn'?' sel':'') + '" onclick="setSt(\''+s.id+'\',\'warn\',this,\''+estIa+'\')">Regular</button><button class="status-btn bad' + (ws==='bad'?' sel':'') + '" onclick="setSt(\''+s.id+'\',\'bad\',this,\''+estIa+'\')">Malo/Critico</button><button class="status-btn na" onclick="setSt(\''+s.id+'\',\'na\',this,\''+estIa+'\')">N/A</button></div><textarea id="obs-'+s.id+'" placeholder="Observaciones...">'+desc+'</textarea></div>';
+  }).join('');
+
+  document.getElementById('photoGrid').innerHTML = uploadedFiles.map(function(f,i){
+    var r = analysisResults[i] || {};
+    var bc = r.estado==='BUENO' ? 'tag-ok' : r.estado==='REGULAR' ? 'tag-warn' : 'tag-bad';
+    return '<div class="photo-thumb"><img src="'+f.url+'" alt="'+f.name+'"/><div class="plabel">'+f.name.substring(0,16)+'</div><span class="pbadge '+bc+'">'+(r.estado||'?')+'</span></div>';
+  }).join('');
+
+  var recArr = Object.values(analysisResults).filter(function(r){ return r.estado==='MALO'||r.estado==='CRITICO'; }).map(function(r){ return '- Atencion en ' + (CATS[r.categoria]||'componente') + ': ' + (r.hallazgos||[]).join(', '); });
+  if (!recArr.length) recArr.push('Estructura en condiciones generales aceptables. Continuar con programa de mantenimiento preventivo.');
+  document.getElementById('recs').value = recArr.join('\n');
+}
+
+async function setSt(id, val, btn, estadoIa) {
+  var prevVal = window._st[id];
+  window._st[id] = val;
+  btn.parentElement.querySelectorAll('.status-btn').forEach(function(b){ b.classList.remove('sel'); });
+  btn.classList.add('sel');
+  // Guardar correccion si cambio el estado
+  if (estadoIa && estadoIa !== val && estadoIa !== 'ERROR') {
+    var obs = document.getElementById('obs-' + id);
+    try {
+      await api('/api/correcciones', {
+        method: 'POST',
+        body: JSON.stringify({ categoria: id, estado_ia: estadoIa, estado_corregido: val === 'ok' ? 'BUENO' : val === 'warn' ? 'REGULAR' : val === 'bad' ? 'MALO' : 'N/A', observacion: obs ? obs.value : '' })
+      });
+    } catch(e) { console.log('Error guardando correccion:', e); }
+  }
+}
+
+// GUARDAR INFORME
+async function guardarInforme() {
+  var sitio = document.getElementById('naming').value || 'SIN-CODIGO';
+  var datos = {
+    responsable: document.getElementById('responsable').value,
+    contratista: document.getElementById('contratista').value,
+    relevado: document.getElementById('relevado').value,
+    fechaCampo: document.getElementById('fechaCampo').value,
+    matricula: document.getElementById('matricula').value,
+    naming: sitio,
+    codigoTP: document.getElementById('codigoTP').value,
+    nombre: document.getElementById('nombre').value,
+    tipo: document.getElementById('tipo').value,
+    hallazgos: Object.values(analysisResults),
+    secciones: window._st
+  };
+  try {
+    var resp = await api('/api/informes', { method: 'POST', body: JSON.stringify({ sitio, datos, estado: 'borrador' }) });
+    var data = await resp.json();
+    if (resp.ok) alert('Informe guardado correctamente (ID: ' + data.id + ')');
+    else alert('Error al guardar: ' + data.error);
+  } catch(e) { alert('Error: ' + e.message); }
+}
+
+// LOAD DASHBOARD
+async function loadDashboard() {
+  try {
+    var resp = await api('/api/informes');
+    var data = await resp.json();
+    var ahora = new Date();
+    document.getElementById('statTotal').textContent = data.length;
+    document.getElementById('statBorrador').textContent = data.filter(function(d){ return d.estado==='borrador'; }).length;
+    document.getElementById('statAprobado').textContent = data.filter(function(d){ return d.estado==='aprobado'; }).length;
+    document.getElementById('statMes').textContent = data.filter(function(d){ var f = new Date(d.created_at); return f.getMonth()===ahora.getMonth()&&f.getFullYear()===ahora.getFullYear(); }).length;
+    var tbody = document.getElementById('dashInformesBody');
+    if (!data.length) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#475569;padding:20px">Sin informes todavia</td></tr>'; return; }
+    tbody.innerHTML = data.slice(0,5).map(function(inf){
+      return '<tr><td style="color:#e2e8f0;font-weight:500">'+inf.sitio_codigo+'</td><td><span class="estado-badge estado-'+inf.estado+'">'+inf.estado+'</span></td><td>'+new Date(inf.created_at).toLocaleDateString('es-AR')+'</td><td><button class="btn btn-secondary" style="padding:4px 10px;font-size:11px" onclick="verInforme('+inf.id+')">Ver</button></td></tr>';
+    }).join('');
+  } catch(e) { console.log('Error cargando dashboard:', e); }
+}
+
+async function loadMisInformes() {
+  try {
+    var resp = await api('/api/informes');
+    var data = await resp.json();
+    var tbody = document.getElementById('misInformesBody');
+    if (!data.length) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#475569;padding:20px">No tenes informes todavia</td></tr>'; return; }
+    tbody.innerHTML = data.map(function(inf){
+      return '<tr><td style="color:#e2e8f0;font-weight:500">'+inf.sitio_codigo+'</td><td><span class="estado-badge estado-'+inf.estado+'">'+inf.estado+'</span></td><td>'+new Date(inf.created_at).toLocaleDateString('es-AR')+'</td><td><button class="btn btn-secondary" style="padding:4px 10px;font-size:11px" onclick="verInforme('+inf.id+')">Ver</button></td></tr>';
+    }).join('');
+  } catch(e) { console.log('Error:', e); }
+}
+
+async function loadTodosInformes() {
+  try {
+    var resp = await api('/api/informes');
+    var data = await resp.json();
+    var tbody = document.getElementById('todosInformesBody');
+    if (!data.length) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#475569;padding:20px">Sin informes</td></tr>'; return; }
+    tbody.innerHTML = data.map(function(inf){
+      var nombre = inf.usuarios ? inf.usuarios.nombre : '-';
+      var aprobar = inf.estado === 'borrador' ? '<button class="btn btn-success" style="padding:4px 10px;font-size:11px;margin-left:6px" onclick="aprobarInforme('+inf.id+')">Aprobar</button>' : '';
+      return '<tr><td style="color:#e2e8f0;font-weight:500">'+inf.sitio_codigo+'</td><td style="color:#94a3b8">'+nombre+'</td><td><span class="estado-badge estado-'+inf.estado+'">'+inf.estado+'</span></td><td>'+new Date(inf.created_at).toLocaleDateString('es-AR')+'</td><td><button class="btn btn-secondary" style="padding:4px 10px;font-size:11px" onclick="verInforme('+inf.id+')">Ver</button>'+aprobar+'</td></tr>';
+    }).join('');
+  } catch(e) { console.log('Error:', e); }
+}
+
+async function aprobarInforme(id) {
+  if (!confirm('Aprobar este informe?')) return;
+  var resp = await api('/api/informes/' + id + '/aprobar', { method: 'PATCH' });
+  if (resp.ok) { alert('Informe aprobado'); loadTodosInformes(); }
+}
+
+function verInforme(id) { alert('Vista de informe en desarrollo — ID: ' + id); }
+
+async function loadUsuarios() {
+  try {
+    var resp = await api('/api/usuarios');
+    var data = await resp.json();
+    var tbody = document.getElementById('usuariosBody');
+    if (!data.length) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#475569;padding:20px">Sin usuarios</td></tr>'; return; }
+    tbody.innerHTML = data.map(function(u){
+      return '<tr><td style="color:#e2e8f0">'+u.nombre+'</td><td style="color:#94a3b8">'+u.email+'</td><td><span class="rol-pill '+(u.rol==='jefe'?'rol-jefe':'rol-auxiliar')+'">'+u.rol+'</span></td><td>'+new Date(u.created_at).toLocaleDateString('es-AR')+'</td></tr>';
+    }).join('');
+  } catch(e) { console.log('Error:', e); }
+}
+
+async function crearUsuario() {
+  var nombre = document.getElementById('nuevoNombre').value.trim();
+  var email = document.getElementById('nuevoEmail').value.trim();
+  var pass = document.getElementById('nuevoPass').value;
+  var rol = document.getElementById('nuevoRol').value;
+  var msg = document.getElementById('usuarioMsg');
+  if (!nombre || !email || !pass) { msg.textContent = 'Completa todos los campos'; msg.style.color = '#f87171'; msg.style.display = 'block'; return; }
+  var resp = await api('/api/usuarios', { method: 'POST', body: JSON.stringify({ nombre, email, password: pass, rol }) });
+  var data = await resp.json();
+  if (resp.ok) {
+    msg.textContent = 'Usuario creado correctamente'; msg.style.color = '#22c55e'; msg.style.display = 'block';
+    document.getElementById('nuevoNombre').value = ''; document.getElementById('nuevoEmail').value = ''; document.getElementById('nuevoPass').value = '';
+    loadUsuarios();
+  } else { msg.textContent = 'Error: ' + data.error; msg.style.color = '#f87171'; msg.style.display = 'block'; }
+}
+
+// PDF
+function generatePDF() {
+  var jsPDFLib = window.jspdf;
+  var doc = new jsPDFLib.jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+  var W = 210, M = 18, y = 20;
+  function txt(s,x,sz,st,col){sz=sz||9;st=st||'normal';col=col||[30,30,30];doc.setFontSize(sz);doc.setFont('helvetica',st);doc.setTextColor(col[0],col[1],col[2]);if(s)doc.text(String(s),x,y);}
+  function nl(n){y+=(n||5);}
+  function ln(){doc.setDrawColor(210,220,235);doc.line(M,y,W-M,y);nl(4);}
+  function chk(){if(y>268){doc.addPage();y=18;}}
+  var tipo = document.getElementById('tipo').value;
+  var tienRiendas = TIPO_RIENDAS.includes(tipo);
+
+  doc.setFillColor(10,22,42);doc.rect(0,0,W,44,'F');
+  doc.setFillColor(14,165,233);doc.rect(0,0,4,44,'F');
+  doc.setFontSize(14);doc.setFont('helvetica','bold');doc.setTextColor(255,255,255);
+  doc.text('FICHA DE MANTENIMIENTO INTEGRAL',M+2,16);
+  doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(148,187,215);
+  doc.text('Intervencion de Mantenimiento Integral - Telecom Argentina S.A.',M+2,23);
+  doc.text('Sitio: '+(document.getElementById('naming').value||'-')+'  -  '+(document.getElementById('nombre').value||'-')+'  -  '+TIPO_LABELS[tipo],M+2,29);
+  doc.text('Generado: '+new Date().toLocaleDateString('es-AR')+'  |  Inspector: '+currentUser.nombre,M+2,35);
+  y=52;
+
+  doc.setFillColor(232,242,252);doc.rect(M,y-5,W-2*M,34,'F');
+  doc.setFillColor(14,165,233);doc.rect(M,y-5,2,34,'F');
+  txt('DATOS DEL CONTRATISTA',M+5,8,'bold',[14,55,110]);nl(7);
+  txt('Responsable: '+(document.getElementById('responsable').value||'-'),M+5,8,'normal',[35,55,80]);nl(5);
+  txt('Contratista: '+(document.getElementById('contratista').value||'-')+'   Relevado por: '+(document.getElementById('relevado').value||'-'),M+5,8,'normal',[35,55,80]);nl(5);
+  txt('Fecha en campo: '+(document.getElementById('fechaCampo').value||'-')+'   Matricula: '+(document.getElementById('matricula').value||'-'),M+5,8,'normal',[35,55,80]);nl(12);
+
+  doc.setFillColor(238,245,255);doc.rect(M,y-5,W-2*M,38,'F');
+  doc.setFillColor(14,165,233);doc.rect(M,y-5,2,38,'F');
+  txt('DATOS BASICOS DE LA ESTRUCTURA',M+5,8,'bold',[14,55,110]);nl(7);
+  txt('Codigo ESA: '+(document.getElementById('naming').value||'-')+'   Codigo TP: '+(document.getElementById('codigoTP').value||'-')+'   Nombre: '+(document.getElementById('nombre').value||'-'),M+5,8,'normal',[35,55,80]);nl(5);
+  txt('Tipo: '+TIPO_LABELS[tipo]+'   Lote: '+(document.getElementById('lote').value||'-')+'   Region: '+(document.getElementById('region').value||'-')+'   Provincia: '+(document.getElementById('provincia').value||'-'),M+5,8,'normal',[35,55,80]);nl(5);
+  txt('Ciudad: '+(document.getElementById('ciudad').value||'-')+'   Zona: '+(document.getElementById('zona').value||'-')+'   Altura: '+(document.getElementById('altura').value||'-')+' m   Base: '+(document.getElementById('alturaBase').value||'-')+' m',M+5,8,'normal',[35,55,80]);nl(5);
+  txt('Coordenadas: '+(document.getElementById('lat').value||'-')+' / '+(document.getElementById('lon').value||'-'),M+5,8,'normal',[35,55,80]);nl(12);
+
+  if(radios.ampliado==='SI'){doc.setFillColor(26,19,10);doc.rect(M,y-3,W-2*M,10,'F');txt('INFORME AMPLIADO: SI  -  '+radios.estado,M+4,8,'bold',[245,158,11]);nl(10);}
+  else{txt('Informe Ampliado: NO',M,8,'normal',[100,116,139]);nl(6);}
+  if(radios.fallido==='SI'){doc.setFillColor(31,10,10);doc.rect(M,y-3,W-2*M,10,'F');txt('INFORME FALLIDO: SI  -  '+radios.motivo,M+4,8,'bold',[248,113,113]);nl(6);var obsF=document.getElementById('obsFallido').value;if(obsF){doc.setFontSize(7);doc.setFont('helvetica','italic');doc.setTextColor(150,100,100);doc.splitTextToSize(obsF,W-2*M-6).forEach(function(l){doc.text(l,M+4,y);nl(4);});}nl(6);}
+  else{txt('Informe Fallido: NO',M,8,'normal',[100,116,139]);nl(8);}
+
+  chk();
+  doc.setFontSize(10);doc.setFont('helvetica','bold');doc.setTextColor(14,55,100);
+  doc.text('VERIFICACION POR SECCION',M,y);nl(6);ln();
+  var stCol={ok:[22,163,74],warn:[217,119,6],bad:[220,38,38],na:[100,116,139]};
+  var stLbl={ok:'BUENO',warn:'REGULAR',bad:'MALO/CRITICO',na:'N/A'};
+  var sectShow=tienRiendas?SECTIONS:SECTIONS.filter(function(s){return s.id!=='riendas';});
+  sectShow.forEach(function(s){
+    chk();
+    var st=window._st[s.id]||'ok';
+    var el=document.getElementById('obs-'+s.id);
+    var obs=el?el.value:'';
+    var col=stCol[st]||[100,116,139];
+    doc.setFillColor(col[0],col[1],col[2]);doc.rect(M,y-3,3,7,'F');
+    txt(s.label.toUpperCase(),M+7,8,'bold',[40,40,40]);
+    doc.setFontSize(7);doc.setFont('helvetica','bold');doc.setTextColor(col[0],col[1],col[2]);
+    doc.text(stLbl[st]||'',W-M-20,y);nl(6);
+    if(obs){doc.setFontSize(7.5);doc.setFont('helvetica','normal');doc.setTextColor(80,80,80);doc.splitTextToSize(obs,W-2*M-12).forEach(function(l){chk();doc.text(l,M+7,y);nl(4.5);});}
+    nl(3);
+  });
+
+  if(tienRiendas){
+    nl(4);chk();
+    doc.setFontSize(10);doc.setFont('helvetica','bold');doc.setTextColor(14,55,100);
+    doc.text('MEDICIONES DE PRETENSADO DE RIENDAS',M,y);nl(6);ln();
+    var nr=parseInt(document.getElementById('nriendas').value)||3;
+    for(var i=1;i<=nr;i++){var el2=document.getElementById('med'+i);var v=el2?el2.value||'-':'-';chk();txt('Anclaje '+i+': '+v+' kg',M+4,8,'normal',[40,40,40]);nl(5);}
+    var elMin=document.getElementById('medMin'),elMax=document.getElementById('medMax');
+    var mn=elMin?elMin.value:'',mx=elMax?elMax.value:'';
+    if(mn||mx){chk();txt('Rango s/norma: T min '+(mn||'?')+' kg  -  T max '+(mx||'?')+' kg',M+4,8,'normal',[80,80,80]);nl(5);}
+  }
+
+  var recsVal=document.getElementById('recs').value;
+  if(recsVal){nl(4);chk();doc.setFontSize(10);doc.setFont('helvetica','bold');doc.setTextColor(14,55,100);doc.text('RECOMENDACIONES',M,y);nl(6);ln();doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(40,40,40);doc.splitTextToSize(recsVal,W-2*M).forEach(function(l){chk();doc.text(l,M,y);nl(5);});}
+  var obsVal=document.getElementById('obsGral').value;
+  if(obsVal){nl(4);chk();doc.setFontSize(10);doc.setFont('helvetica','bold');doc.setTextColor(14,55,100);doc.text('OBSERVACIONES GENERALES',M,y);nl(6);ln();doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(40,40,40);doc.splitTextToSize(obsVal,W-2*M).forEach(function(l){chk();doc.text(l,M,y);nl(5);});}
+
+  nl(10);chk();
+  doc.setDrawColor(180,200,220);doc.line(M,y,M+75,y);doc.line(W-M-75,y,W-M,y);nl(5);
+  doc.setFontSize(7);doc.setFont('helvetica','normal');doc.setTextColor(120,140,160);
+  doc.text('Firma electronica: '+currentUser.nombre,M,y);
+  doc.text(document.getElementById('contratista').value||'-',W-M-75,y);
+
+  var pc=doc.getNumberOfPages();
+  for(var j=1;j<=pc;j++){
+    doc.setPage(j);
+    doc.setFillColor(10,22,42);doc.rect(0,287,W,10,'F');
+    doc.setFontSize(7);doc.setFont('helvetica','normal');doc.setTextColor(148,187,215);
+    doc.text('Telecom Argentina S.A. - Ficha de Mantenimiento Integral',M,293);
+    doc.text((document.getElementById('naming').value||'-')+' - '+(document.getElementById('fechaCampo').value||'-')+' - Pag. '+j+'/'+pc,W-M-70,293);
+  }
+  doc.save('FichaIM_'+(document.getElementById('naming').value||'sitio')+'_'+(document.getElementById('fechaCampo').value||'fecha')+'.pdf');
+}
+</script>
+</body>
+</html>
